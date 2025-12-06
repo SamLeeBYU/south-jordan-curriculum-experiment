@@ -125,14 +125,12 @@ generate_classroom_data <- function(
 
   Z = matrix(rnorm(nrow(design) * 2), ncol = 2)
 
-  Y <- Z %*% t(L.u) + mu
-  spelling = clip01(Y[, 1])
-  phonics = clip01(Y[, 2])
+  Y <- Z %*% L.u + mu
 
   long_data <- design %>%
     mutate(
-      spelling = spelling,
-      phonic = phonics
+      spelling = clip01(Y[, 1]),
+      phonics = clip01(Y[, 2])
     )
 
   long_data
