@@ -56,8 +56,8 @@ theme_paper <- function(base_size = 14, text_size = 14, base_family = "cm") {
 }
 
 paper_palette <- c(
-  "#5e57beff",
-  "#d94202ff",
+  "#5e57be",
+  "#d94202",
   "#1b9e77",
   "#e7298a",
   "#66a61e",

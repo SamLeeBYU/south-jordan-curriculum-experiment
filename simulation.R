@@ -7,13 +7,14 @@ plan <- expand.grid(
   spelling = -5:5,
   phonics = -5:5
 )
-simulate <- function(plan, B = 100, seed = NULL) {
+simulate <- function(plan, B = 1000, seed = NULL) {
   if (!is.null(seed)) {
     set.seed(seed)
   }
-  plan$phatFE <- 0
+  plan$phat.w <- plan$phat.f <- 0
   for (i in 1:nrow(plan)) {
-    rejections <- matrix(0, nrow = B, ncol = 1)
+    rejections.w <- matrix(0, nrow = B, ncol = 1)
+    rejections.f <- matrix(0, nrow = B, ncol = 1)
     plan.i <- plan[i, ]
     for (b in 1:B) {
       ellas.class <- generate_classroom_data(
@@ -36,14 +37,20 @@ simulate <- function(plan, B = 100, seed = NULL) {
       )
 
       fe <- fit.lm(ellas.class)
-      rejections[b, 1] <- wald.test(fe)
+      rejections.w[b, 1] <- wald.test(fe)
+      rejections.f[b, 1] <- f.test(fe)
     }
-    plan$phatFE[i] = mean(rejections[, 1])
+    plan$phat.w[i] = mean(rejections.w[, 1])
+    plan$phat.f[i] = mean(rejections.f[, 1])
     print(round(100 * i / nrow(plan)) / 100)
   }
-  plan$MCSEFE <- sqrt(plan$phatFE * (1 - plan$phatFE) / B)
+  plan$MCSE.w <- sqrt(plan$phat.w * (1 - plan$phat.w) / B)
+  plan$MCSE.f <- sqrt(plan$phat.f * (1 - plan$phat.f) / B)
   plan
 }
 
-rejection.rates <- simulate(plan, B = 10000)
+rejection.rates <- simulate(
+  plan,
+  B = 2000
+)
 saveRDS(rejection.rates, "rejection-rates-sim.RDS")

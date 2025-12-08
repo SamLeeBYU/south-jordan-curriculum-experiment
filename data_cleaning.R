@@ -21,11 +21,11 @@ blue$Unit.12.Phonics.Post[10] = 83
 blue$Unit.12.Phonics.Post[11] = 83
 
 ### 2. Drop rows where Student.Number is NA ----
-red  <- red  %>% filter(!is.na(Student.Number))
+red <- red %>% filter(!is.na(Student.Number))
 blue <- blue %>% filter(!is.na(Student.Number))
 
 ### 3. Add classroom labels ----
-red  <- red  %>% mutate(classroom = "red")
+red <- red %>% mutate(classroom = "red")
 blue <- blue %>% mutate(classroom = "blue")
 
 ### 4. Make score columns numeric ----
@@ -55,32 +55,39 @@ long <- all %>%
 ### 7. Recode variables ----
 long <- long %>%
   mutate(
-    id    = Student.Number,
-    week  = ifelse(unit == "Unit.11", 1L, 2L),
-    time  = factor(time, levels = c("Pre", "Post")),
-    test  = tolower(test),   # "Spelling" -> "spelling", "Phonics" -> "phonics"
+    id = Student.Number,
+    week = ifelse(unit == "Unit.11", 1L, 2L),
+    time = factor(time, levels = c("Pre", "Post")),
+    test = tolower(test), # "Spelling" -> "spelling", "Phonics" -> "phonics"
     classroom = factor(classroom)
   )
 
 ### 8. Assign instruction type based on classroom × week ----
-instruction_fun <- function(classroom, week){
-  if (classroom == "blue" && week == 1) return("traditional")
-  if (classroom == "blue" && week == 2) return("curated")
-  if (classroom == "red"  && week == 1) return("curated")
-  if (classroom == "red"  && week == 2) return("traditional")
+instruction_fun <- function(classroom, week) {
+  if (classroom == "blue" && week == 1) {
+    return("traditional")
+  }
+  if (classroom == "blue" && week == 2) {
+    return("curated")
+  }
+  if (classroom == "red" && week == 1) {
+    return("curated")
+  }
+  if (classroom == "red" && week == 2) return("traditional")
 }
 
 long <- long %>%
   rowwise() %>%
   mutate(instruction = instruction_fun(classroom, week)) %>%
   ungroup() %>%
-  mutate(instruction = factor(instruction, levels = c("traditional", "curated")))
+  mutate(
+    instruction = factor(instruction, levels = c("traditional", "curated"))
+  )
 
 ### 9. Final cleanup ----
 final_data <- long %>%
-  dplyr::select(id, classroom, week, time, instruction, test, score) %>%
+  dplyr::select(id, Age, classroom, week, time, instruction, test, score) %>%
   arrange(id, week, test, time)
 
 glimpse(final_data)
 saveRDS(final_data, "data/final_project_scores.rds")
-

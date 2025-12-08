@@ -239,26 +239,41 @@ ggsave(
 ##### Simulation Study Results #####
 
 rr <- readRDS("rejection-rates-sim.RDS")
-rr.plt <- ggplot(rr, aes(spelling, phonics, fill = phatFE)) +
-  geom_raster(interpolate = F) +
-  geom_text(aes(label = sprintf("%.2f", phatFE)), color = "white", size = 16) +
-  scale_fill_viridis_c(option = "turbo") +
+lims <- range(c(rr$phat.w, rr$phat.f), na.rm = TRUE)
+
+rr.plt.W <- ggplot(rr, aes(spelling, phonics, fill = phat.w)) +
+  geom_raster(interpolate = FALSE) +
+  geom_text(aes(label = sprintf("%.2f", phat.w)), color = "white", size = 16) +
+  scale_fill_viridis_c(option = "turbo", limits = lims) +
   coord_equal() +
   labs(fill = "Rejection Rates", x = "Spelling Effect", y = "Phonics Effect") +
   theme_paper(base_size = 10, text_size = 64) +
-  theme(
-    legend.position = "none"
-    # legend.title = element_text(size = 64),
-    # legend.text = element_text(size = 64)
-  )
+  theme(legend.position = "none")
+
+rr.plt.F <- ggplot(rr, aes(spelling, phonics, fill = phat.f)) +
+  geom_raster(interpolate = FALSE) +
+  geom_text(aes(label = sprintf("%.2f", phat.f)), color = "white", size = 16) +
+  scale_fill_viridis_c(option = "turbo", limits = lims) +
+  coord_equal() +
+  labs(fill = "Rejection Rates", x = "Spelling Effect", y = "Phonics Effect") +
+  theme_paper(base_size = 10, text_size = 64) +
+  theme(legend.position = "none")
+
 ggsave(
-  "Figures/rr.png",
-  rr.plt,
+  "Figures/rrw.png",
+  rr.plt.W,
   width = 4,
   height = 4,
   dpi = 900
 )
 
+ggsave(
+  "Figures/rrf.png",
+  rr.plt.F,
+  width = 4,
+  height = 4,
+  dpi = 900
+)
 
 ##### BAYESIAN ESTIMATION #####
 
@@ -299,23 +314,45 @@ ggsave(
 
 ### EDA ###
 final_data <- readRDS("data/final_project_scores.rds")
-post.scores.by.instruction <- final_data %>%
-  group_by(instruction, test, time) %>%
+post.scores.by.instruction <-
+  final_data %>%
+  group_by(instruction, test, time, classroom) %>%
   summarize(mean_score = mean(score), .groups = "drop") %>%
-  ggplot(aes(time, mean_score, group = instruction, color = instruction)) +
-  geom_line(size = 1.2) +
-  geom_point(size = 3) +
-  facet_wrap(~test) +
-  labs(title = "Pre/Post Scores by Instruction Type", y = "Mean Score (%)") +
+  ggplot(aes(
+    time,
+    mean_score,
+    group = interaction(instruction, classroom),
+    color = classroom
+  )) +
+  geom_line() +
+  geom_point(aes(shape = instruction)) +
+  scale_color_paper() +
+  facet_wrap(
+    ~test,
+    labeller = labeller(
+      test = c(
+        "phonics" = "Phonics",
+        "spelling" = "Spelling"
+      )
+    )
+  ) +
+  labs(
+    title = "Pre/Post Scores by Instruction Type",
+    y = "Mean Score (%)",
+    color = "Classroom",
+    shape = "Instruction Type"
+  ) +
   theme_paper(base_size = 10, text_size = 64) +
   theme(
     legend.title = element_text(size = 64),
-    legend.text = element_text(size = 64)
+    legend.text = element_text(size = 64),
+    strip.text.x = element_text(size = 64),
+    strip.text.y = element_text(size = 64)
   )
 ggsave(
   "Figures/post_scores_by_instruction.png",
   post.scores.by.instruction,
-  width = 5,
+  width = 6,
   height = 2.8,
   dpi = 900
 )
